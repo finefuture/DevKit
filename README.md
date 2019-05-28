@@ -33,6 +33,7 @@ jvm启动参数说明:
 |`-Ddev_meta=http://localhost:10005`|指定apollo的config server地址|
 |`-Denv=DEV`|指定使用的apollo环境|
 |`-Dapp.id=10000021312`|指定使用的apollo appId|
+
 apollo缓存配置项说明:前缀就是@Cache注解的configKey,默认是""
 
 | 后缀 | 作用 |
