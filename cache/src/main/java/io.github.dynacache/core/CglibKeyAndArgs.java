@@ -2,6 +2,8 @@ package io.github.dynacache.core;
 
 import org.springframework.cglib.proxy.MethodProxy;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Cglib extensions for caching keys
  *
@@ -26,7 +28,11 @@ public class CglibKeyAndArgs extends KeyAndArgs {
 
     @Override
     public Object invoke() throws Throwable {
-        return proxy.invokeSuper(getTarget(), getArgs());
+        Object ret = proxy.invokeSuper(getTarget(), getArgs());
+        if (ret instanceof CompletableFuture) {
+            return ((CompletableFuture) ret).get();
+        }
+        return ret;
     }
 
     @Override

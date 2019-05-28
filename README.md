@@ -12,7 +12,7 @@ Dynacache是动态缓存的一种实现，通过SPI机制可以制定特殊的�
 <dependency>
     <groupId>io.github.finefuture</groupId>
     <artifactId>cache</artifactId>
-    <version>1.0.1.RELEASE</version>
+    <version>1.0.2.RELEASE</version>
 </dependency>
 ```
 
