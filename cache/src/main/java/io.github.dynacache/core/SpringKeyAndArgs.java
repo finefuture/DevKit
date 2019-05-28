@@ -2,6 +2,8 @@ package io.github.dynacache.core;
 
 import org.aopalliance.intercept.MethodInvocation;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Spring extensions for caching keys
  *
@@ -26,7 +28,11 @@ public class SpringKeyAndArgs extends KeyAndArgs {
 
     @Override
     public Object invoke() throws Throwable {
-        return proxy.proceed();
+        Object ret = proxy.proceed();
+        if (ret instanceof CompletableFuture) {
+            return ((CompletableFuture) ret).get();
+        }
+        return ret;
     }
 
     @Override

@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 /**
  * @author longqiang
  * @version 1.0
@@ -20,9 +23,27 @@ public class Controller {
     @Autowired
     TService tService;
 
-    @GetMapping
-    public Integer test(int bound) {
-        return tService.loj(bound);
+    @GetMapping("async1")
+    public Integer test1(int bound) throws ExecutionException, InterruptedException {
+        CompletableFuture<Integer> loj = tService.lojAsync1(bound);
+        while (!loj.isDone()) {
+            //you can do something before future is done
+        }
+        return loj.get();
+    }
+
+    @GetMapping("async2")
+    public Integer test2(int bound) throws ExecutionException, InterruptedException {
+        CompletableFuture<Integer> loj = (CompletableFuture<Integer>) tService.lojAsync2(bound);
+        while (!loj.isDone()) {
+            //you can do something before future is done
+        }
+        return loj.get();
+    }
+
+    @GetMapping("sync1")
+    public Integer test3(int bound) {
+        return tService.lojSync(bound);
     }
 
 }

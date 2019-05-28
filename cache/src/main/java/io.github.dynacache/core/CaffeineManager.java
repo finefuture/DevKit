@@ -9,8 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Caffeine Manager
@@ -57,6 +58,12 @@ public final class CaffeineManager {
         if (cacheable.maximumWeight() > 0) {
             builder.maximumWeight(cacheable.maximumWeight());
         }
+        if (cacheable.refreshAfterWrite() > 0) {
+            builder.refreshAfterWrite(cacheable.refreshAfterWrite(), TimeUnit.NANOSECONDS);
+        }
+        if (cacheable.recordStats()) {
+            builder.recordStats();
+        }
         return builder;
     }
 
@@ -70,7 +77,7 @@ public final class CaffeineManager {
         return SYNC_CACHE_MAP.computeIfAbsent(cacheable.value(), k -> buildSync(cacheable));
     }
 
-    public static <T> T get(KeyAndArgs key) {
+    public static Object get(KeyAndArgs key) {
         if (key.isAsync()) {
             return getAsync(key);
         }
@@ -78,15 +85,9 @@ public final class CaffeineManager {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T getAsync(KeyAndArgs key) {
+    private static CompletableFuture<Object> getAsync(KeyAndArgs key) {
         try {
-            return (T) getOrCreateAsyncCache(key.getTarget()).get(key).get();
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error("[LocalCache] 异步执行异常: key:{}, exception:{}", key, e);
-            return null;
-        } catch (ClassCastException e) {
-            logger.error("[LocalCache] 类型转换异常,获取了错误的缓存: key:{}, exception:{}", key, e);
-            return null;
+            return getOrCreateAsyncCache(key.getTarget()).get(key);
         } catch (Exception e) {
             logger.error("[LocalCache] 获取缓存异常: key:{}, exception:{}", key, e);
             return null;

@@ -36,4 +36,11 @@ public @interface Cacheable {
 
     boolean softValues() default false;
 
+    /**
+     * long Time in nanos
+     */
+    long refreshAfterWrite() default -1;
+
+    boolean recordStats() default false;
+
 }
