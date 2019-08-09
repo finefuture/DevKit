@@ -1,4 +1,4 @@
-package io.github.finefuture.devKit.core.spi;
+package io.github.finefuture.devkit.core.spi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * {@see <a href="https://github.com/alibaba/Sentinel">Sentinel</a>}
+ * https://github.com/alibaba/Sentinel
  *
  * @author Eric Zhao
  */

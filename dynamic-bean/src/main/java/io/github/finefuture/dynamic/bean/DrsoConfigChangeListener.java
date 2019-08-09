@@ -12,7 +12,6 @@ import java.util.Objects;
 /**
  * @author longqiang
  * @version 1.0
- * @date 2019/8/6 16:23
  */
 public class DrsoConfigChangeListener implements ConfigChangeListener {
 

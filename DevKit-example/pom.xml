@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>example</artifactId>
+    <artifactId>DevKit-example</artifactId>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -34,17 +34,27 @@
             <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.github.finefuture</groupId>
+            <artifactId>dynamic-bean</artifactId>
+            <version>1.0.1.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.10.0</version>
+        </dependency>
     </dependencies>
 
     <build>
-        <finalName>dynacache-example</finalName>
+        <finalName>DevKit-example</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <fork>true</fork>
-                    <mainClass>io.github.finefuture.dynamic.cache.CacheApplication</mainClass>
+                    <mainClass>io.github.finefuture.devkit.example.Application</mainClass>
                 </configuration>
                 <executions>
                     <execution>

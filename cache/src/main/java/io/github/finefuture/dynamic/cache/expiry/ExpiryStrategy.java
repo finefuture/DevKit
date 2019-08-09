@@ -6,9 +6,6 @@ import io.github.finefuture.dynamic.cache.core.KeyAndArgs;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
-
 /**
  * Cache expiry strategy
  *

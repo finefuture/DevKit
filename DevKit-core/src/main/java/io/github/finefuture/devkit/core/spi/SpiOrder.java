@@ -1,4 +1,4 @@
-package io.github.finefuture.devKit.core.spi;
+package io.github.finefuture.devkit.core.spi;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@see <a href="https://github.com/alibaba/Sentinel">Sentinel</a>}
+ * https://github.com/alibaba/Sentinel
  *
  * @author Eric Zhao
  */

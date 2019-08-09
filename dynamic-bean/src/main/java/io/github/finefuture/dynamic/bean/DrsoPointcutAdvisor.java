@@ -1,6 +1,6 @@
 package io.github.finefuture.dynamic.bean;
 
-import io.github.finefuture.devKit.core.spi.SpiLoader;
+import io.github.finefuture.devkit.core.spi.SpiLoader;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.Pointcut;
