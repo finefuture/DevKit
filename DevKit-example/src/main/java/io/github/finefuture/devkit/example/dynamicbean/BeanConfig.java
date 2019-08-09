@@ -21,7 +21,7 @@ public class BeanConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BeanConfig.class);
 
-    @DynamicBean(keys = "redis.optional.url")
+    @DynamicBean(keys = {"redis.optional.url", "redis.password"})
     @Bean
     public RedissonClient redissonClient() {
         com.ctrip.framework.apollo.Config appConfig = ConfigService.getAppConfig();

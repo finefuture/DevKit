@@ -2,7 +2,7 @@ package io.github.finefuture.dynamic.cache.expiry;
 
 import com.ctrip.framework.apollo.Config;
 import com.ctrip.framework.apollo.ConfigService;
-import io.github.finefuture.devKit.core.spi.SpiOrder;
+import io.github.finefuture.devkit.core.spi.SpiOrder;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.concurrent.TimeUnit;

@@ -1,7 +1,7 @@
 package io.github.finefuture.dynamic.cache.expiry;
 
 import com.github.benmanes.caffeine.cache.Expiry;
-import io.github.finefuture.devKit.core.spi.SpiLoader;
+import io.github.finefuture.devkit.core.spi.SpiLoader;
 import io.github.finefuture.dynamic.cache.core.KeyAndArgs;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
