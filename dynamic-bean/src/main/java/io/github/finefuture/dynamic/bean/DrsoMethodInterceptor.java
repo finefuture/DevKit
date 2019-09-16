@@ -15,7 +15,6 @@ import java.util.Set;
 /**
  * @author longqiang
  * @version 1.0
- * @date 2019/9/10 11:25
  */
 public class DrsoMethodInterceptor implements MethodInterceptor, Serializable {
 
@@ -27,13 +26,13 @@ public class DrsoMethodInterceptor implements MethodInterceptor, Serializable {
 
     private Set<String> factoryBeanSet;
 
-    public DrsoMethodInterceptor(DefaultListableBeanFactory beanFactory) {
+    DrsoMethodInterceptor(DefaultListableBeanFactory beanFactory) {
         this.beanFactory = beanFactory;
         this.configService = SpiLoader.loadHighestPriorityInstance(ConfigService.class);
         this.factoryBeanSet = new LinkedHashSet<>();
     }
 
-    public Set<String> getFactoryBeanSet() {
+    Set<String> getFactoryBeanSet() {
         return factoryBeanSet;
     }
 

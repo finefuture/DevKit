@@ -5,9 +5,9 @@ import com.ctrip.framework.apollo.model.ConfigChangeEvent;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.ReflectiveMethodInvocation;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.Serializable;
@@ -33,27 +33,27 @@ public class DrsoConfigChangeListener implements ConfigChangeListener, Serializa
 
     private MethodInvocation invocation;
 
-    private DefaultListableBeanFactory beanFactory;
+    private static DefaultListableBeanFactory beanFactory;
 
-    private Field dependentBeanMap;
+    private static Map<String, Set<String>> dependentBeanMapInstance;
 
-    private Field dependenciesForBeanMap;
+    private static Map<String, Set<String>> dependenciesForBeanMapInstance;
 
-    DrsoConfigChangeListener(DynamicBean dynamicBean, String beanName, MethodInvocation invocation, DefaultListableBeanFactory beanFactory) {
+    DrsoConfigChangeListener(DynamicBean dynamicBean, String beanName, MethodInvocation invocation) {
         this.dynamicBean = dynamicBean;
         this.beanName = beanName;
         this.invocation = invocation;
-        this.beanFactory = beanFactory;
-        initBeanMap();
     }
 
-    private void initBeanMap() {
-        if (dynamicBean.cascade()) {
-            this.dependentBeanMap = ReflectionUtils.findField(DefaultSingletonBeanRegistry.class, "dependentBeanMap");
-            this.dependenciesForBeanMap = ReflectionUtils.findField(DefaultSingletonBeanRegistry.class, "dependenciesForBeanMap");
-            ReflectionUtils.makeAccessible(dependentBeanMap);
-            ReflectionUtils.makeAccessible(dependenciesForBeanMap);
-        }
+    @SuppressWarnings("unchecked")
+    static void initBeanMap(DefaultListableBeanFactory beanFactory) {
+        DrsoConfigChangeListener.beanFactory = beanFactory;
+        Field dependentBeanMap = ReflectionUtils.findField(DefaultSingletonBeanRegistry.class, "dependentBeanMap");
+        Field dependenciesForBeanMap = ReflectionUtils.findField(DefaultSingletonBeanRegistry.class, "dependenciesForBeanMap");
+        ReflectionUtils.makeAccessible(dependentBeanMap);
+        ReflectionUtils.makeAccessible(dependenciesForBeanMap);
+        dependentBeanMapInstance = (Map) ReflectionUtils.getField(dependentBeanMap, beanFactory);
+        dependenciesForBeanMapInstance = (Map) ReflectionUtils.getField(dependenciesForBeanMap, beanFactory);
     }
 
     @Override
@@ -63,37 +63,25 @@ public class DrsoConfigChangeListener implements ConfigChangeListener, Serializa
         }
         for (String key : dynamicBean.keys()) {
             if (changeEvent.isChanged(key)) {
-                Map<String, Set<String>> dependentBeanMapCopy = new ConcurrentHashMap<>(256);
-                Map<String, Set<String>> dependenciesForBeanMapInstanceCopy = new ConcurrentHashMap<>(256);
-                copyBeanMap(dependentBeanMapCopy, dependenciesForBeanMapInstanceCopy);
-                Object bean = beanFactory.getBean(beanName);
-                beanFactory.destroySingleton(beanName);
-                try {
-                    invocation.proceed();
-                } catch (Throwable throwable) {
-                    LOGGER.error("Dynamic replacement bean failed, exception:{}", throwable);
-                    beanFactory.registerSingleton(beanName, bean);
+                synchronized (dependentBeanMapInstance) {
+                    Map<String, Set<String>> dependentBeanMapCopy = new ConcurrentHashMap<>(dependentBeanMapInstance);
+                    Map<String, Set<String>> dependenciesForBeanMapInstanceCopy = new ConcurrentHashMap<>(dependenciesForBeanMapInstance);
+                    Object bean = beanFactory.getBean(beanName);
+                    beanFactory.destroySingleton(beanName);
+                    if (dynamicBean.resetArguments()) {
+                        ((ReflectiveMethodInvocation) invocation).setArguments(new Object[1]);
+                    }
+                    try {
+                        invocation.proceed();
+                    } catch (Throwable throwable) {
+                        LOGGER.error("Dynamic replacement bean failed, exception:{}", throwable);
+                        beanFactory.registerSingleton(beanName, bean);
+                    }
+                    dependentBeanMapInstance.putAll(dependentBeanMapCopy);
+                    dependenciesForBeanMapInstance.putAll(dependenciesForBeanMapInstanceCopy);
                 }
-                resetBeanMap(dependentBeanMapCopy, dependenciesForBeanMapInstanceCopy);
                 break;
             }
-        }
-    }
-
-    private void copyBeanMap(Map<String, Set<String>> dependentBeanMapCopy, Map<String, Set<String>> dependenciesForBeanMapInstanceCopy) {
-        if (dynamicBean.cascade() && Objects.nonNull(dependentBeanMapCopy) && Objects.nonNull(dependenciesForBeanMapInstanceCopy)) {
-            Map<String, Set<String>> dependentBeanMapInstance = (Map) ReflectionUtils.getField(dependentBeanMap, beanFactory);
-            Map<String, Set<String>> dependenciesForBeanMapInstance = (Map) ReflectionUtils.getField(dependenciesForBeanMap, beanFactory);
-            dependentBeanMapCopy.putAll(dependentBeanMapInstance);
-            dependenciesForBeanMapInstanceCopy.putAll(dependenciesForBeanMapInstance);
-        }
-    }
-
-    private void resetBeanMap(Map<String, Set<String>> dependentBeanMapCopy, Map<String, Set<String>> dependenciesForBeanMapInstanceCopy) {
-        if (dynamicBean.cascade() && !CollectionUtils.isEmpty(dependentBeanMapCopy)
-                && !CollectionUtils.isEmpty(dependenciesForBeanMapInstanceCopy)) {
-            ReflectionUtils.setField(dependentBeanMap, beanFactory, dependentBeanMapCopy);
-            ReflectionUtils.setField(dependenciesForBeanMap, beanFactory, dependenciesForBeanMapInstanceCopy);
         }
     }
 
@@ -107,13 +95,12 @@ public class DrsoConfigChangeListener implements ConfigChangeListener, Serializa
         }
         DrsoConfigChangeListener that = (DrsoConfigChangeListener) o;
         return Objects.equals(dynamicBean, that.dynamicBean) &&
-                Objects.equals(beanName, that.beanName) &&
-                Objects.equals(beanFactory, that.beanFactory);
+                Objects.equals(beanName, that.beanName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dynamicBean, beanName, beanFactory);
+        return Objects.hash(dynamicBean, beanName);
     }
 
 }

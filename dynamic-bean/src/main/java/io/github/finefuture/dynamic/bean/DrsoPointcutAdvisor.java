@@ -23,14 +23,15 @@ public class DrsoPointcutAdvisor extends DefaultPointcutAdvisor {
 
     private DrsoMethodInterceptor interceptor;
 
-    public DrsoPointcutAdvisor(DefaultListableBeanFactory beanFactory) {
+    DrsoPointcutAdvisor(DefaultListableBeanFactory beanFactory) {
         setOrder(0);
         this.beanFactory = beanFactory;
         this.drsoPointcut = new DrsoPointcut();
         this.interceptor = new DrsoMethodInterceptor(beanFactory);
+        DrsoConfigChangeListener.initBeanMap(beanFactory);
     }
 
-    public Set<String> getFactoryBeanSet() {
+    Set<String> getFactoryBeanSet() {
         return interceptor.getFactoryBeanSet();
     }
 

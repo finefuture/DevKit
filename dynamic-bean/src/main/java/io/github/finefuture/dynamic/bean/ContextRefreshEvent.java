@@ -14,7 +14,6 @@ import java.util.function.BiConsumer;
 /**
  * @author longqiang
  * @version 1.0
- * @date 2019/9/6 18:12
  */
 public class ContextRefreshEvent implements ApplicationListener<ContextRefreshedEvent> {
 
@@ -31,14 +30,15 @@ public class ContextRefreshEvent implements ApplicationListener<ContextRefreshed
     public void onApplicationEvent(ContextRefreshedEvent event) {
         beanFactory.destroySingleton("drso");
         beanFactory.removeBeanDefinition("drso");
-        initAdvisor(AbstractAdvisorAutoProxyCreator.class);
+        initAdvisor();
         drso.getFactoryBeanSet().forEach(beanName -> {
             beanFactory.destroySingleton(beanName);
             beanFactory.getBean(beanName);
         });
     }
 
-    private void initAdvisor(Class<AbstractAdvisorAutoProxyCreator> clazz) {
+    private void initAdvisor() {
+        Class<AbstractAdvisorAutoProxyCreator> clazz = AbstractAdvisorAutoProxyCreator.class;
         Map<String, ? extends AbstractAdvisorAutoProxyCreator> advisorBeans = beanFactory.getBeansOfType(clazz);
         advisorBeans.forEach((BiConsumer<String, AbstractAdvisorAutoProxyCreator>) (s, advisorAutoProxyCreator) -> {
             Method initBeanFactoryMethod = ReflectionUtils.findMethod(clazz, "initBeanFactory", ConfigurableListableBeanFactory.class);

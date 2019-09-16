@@ -15,6 +15,6 @@ public class ApolloConfigService implements ConfigService {
     @Override
     public void addChangeListener(DynamicBean dynamicBean, String beanName, MethodInvocation invocation, DefaultListableBeanFactory beanFactory) {
         Config config = com.ctrip.framework.apollo.ConfigService.getConfig(dynamicBean.namespace());
-        config.addChangeListener(new DrsoConfigChangeListener(dynamicBean, beanName, invocation, beanFactory));
+        config.addChangeListener(new DrsoConfigChangeListener(dynamicBean, beanName, invocation));
     }
 }
