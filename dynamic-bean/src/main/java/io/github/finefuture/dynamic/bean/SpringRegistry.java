@@ -20,4 +20,9 @@ public class SpringRegistry {
         return new DrsoPointcutAdvisor(beanFactory);
     }
 
+    @Bean
+    public ContextRefreshEvent contextRefreshEvent(DefaultListableBeanFactory beanFactory, DrsoPointcutAdvisor drso) {
+        return new ContextRefreshEvent(beanFactory, drso);
+    }
+
 }

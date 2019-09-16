@@ -23,4 +23,6 @@ public @interface DynamicBean {
 
     String namespace() default "application";
 
+    boolean cascade() default true;
+
 }

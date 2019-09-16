@@ -1,14 +1,12 @@
 package io.github.finefuture.dynamic.bean;
 
-import io.github.finefuture.devkit.core.spi.SpiLoader;
 import org.aopalliance.aop.Advice;
-import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
-import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 
-import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Spring PointcutAdvisor
@@ -17,33 +15,54 @@ import java.lang.reflect.Method;
  */
 public class DrsoPointcutAdvisor extends DefaultPointcutAdvisor {
 
+    private static final long serialVersionUID = 3581110452529715632L;
+
     private DefaultListableBeanFactory beanFactory;
 
-    private ConfigService configService;
+    private DrsoPointcut drsoPointcut;
+
+    private DrsoMethodInterceptor interceptor;
 
     public DrsoPointcutAdvisor(DefaultListableBeanFactory beanFactory) {
-        setOrder(HIGHEST_PRECEDENCE);
+        setOrder(0);
         this.beanFactory = beanFactory;
-        this.configService = SpiLoader.loadHighestPriorityInstance(ConfigService.class);
+        this.drsoPointcut = new DrsoPointcut();
+        this.interceptor = new DrsoMethodInterceptor(beanFactory);
+    }
+
+    public Set<String> getFactoryBeanSet() {
+        return interceptor.getFactoryBeanSet();
     }
 
     @Override
     public Pointcut getPointcut() {
-        return new AnnotationMatchingPointcut(null, DynamicBean.class);
+        return drsoPointcut;
     }
 
     @Override
     public Advice getAdvice() {
-        return (MethodInterceptor) invocation -> {
-            Method method = invocation.getMethod();
-            DynamicBean dynamicBean = method.getAnnotation(DynamicBean.class);
-            String beanName = dynamicBean.beanName().isEmpty() ? resolveBeanName(method) : dynamicBean.beanName();
-            configService.addChangeListener(dynamicBean, beanName, invocation, beanFactory);
-            return invocation.proceed();
-        };
+        return interceptor;
     }
 
-    private String resolveBeanName(Method method) {
-        return method.getName();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DrsoPointcutAdvisor)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        DrsoPointcutAdvisor that = (DrsoPointcutAdvisor) o;
+        return Objects.equals(beanFactory, that.beanFactory) &&
+                Objects.equals(drsoPointcut, that.drsoPointcut) &&
+                Objects.equals(interceptor, that.interceptor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), beanFactory, drsoPointcut, interceptor);
     }
 }
