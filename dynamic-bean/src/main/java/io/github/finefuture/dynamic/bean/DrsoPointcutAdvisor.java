@@ -29,6 +29,7 @@ public class DrsoPointcutAdvisor extends DefaultPointcutAdvisor {
         this.drsoPointcut = new DrsoPointcut();
         this.interceptor = new DrsoMethodInterceptor(beanFactory);
         DrsoConfigChangeListener.initBeanMap(beanFactory);
+        ReferenceCounter.initBeanFactory(beanFactory);
     }
 
     Set<String> getFactoryBeanSet() {

@@ -44,7 +44,13 @@ public class DrsoMethodInterceptor implements MethodInterceptor, Serializable {
         DynamicBean dynamicBean = method.getAnnotation(DynamicBean.class);
         String beanName = dynamicBean.beanName().isEmpty() ? resolveBeanName(method) : dynamicBean.beanName();
         configService.addChangeListener(dynamicBean, beanName, invocation, beanFactory);
-        return invocation.proceed();
+        Object retVal = invocation.proceed();
+        if (dynamicBean.resetArguments()) {
+            Object[] arguments = invocation.getArguments();
+            ((ReflectiveMethodInvocation) invocation).setArguments(new Object[arguments.length]);
+        }
+        ReferenceCounter.registerDependentInfo(dynamicBean);
+        return retVal;
     }
 
     private String resolveBeanName(Method method) {

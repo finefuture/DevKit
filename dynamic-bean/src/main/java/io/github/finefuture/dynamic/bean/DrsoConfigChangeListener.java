@@ -2,10 +2,10 @@ package io.github.finefuture.dynamic.bean;
 
 import com.ctrip.framework.apollo.ConfigChangeListener;
 import com.ctrip.framework.apollo.model.ConfigChangeEvent;
+import io.github.finefuture.devkit.core.time.Time;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.framework.ReflectiveMethodInvocation;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
 import org.springframework.util.ReflectionUtils;
@@ -64,25 +64,41 @@ public class DrsoConfigChangeListener implements ConfigChangeListener, Serializa
         for (String key : dynamicBean.keys()) {
             if (changeEvent.isChanged(key)) {
                 synchronized (dependentBeanMapInstance) {
-                    Map<String, Set<String>> dependentBeanMapCopy = new ConcurrentHashMap<>(dependentBeanMapInstance);
-                    Map<String, Set<String>> dependenciesForBeanMapInstanceCopy = new ConcurrentHashMap<>(dependenciesForBeanMapInstance);
-                    Object bean = beanFactory.getBean(beanName);
-                    beanFactory.destroySingleton(beanName);
-                    if (dynamicBean.resetArguments()) {
-                        ((ReflectiveMethodInvocation) invocation).setArguments(new Object[1]);
+                    long start = Time.currentElapsedTime();
+                    long cur = start;
+                    long end = start + dynamicBean.waitTime();
+                    while (!ReferenceCounter.canReplace(dynamicBean) && cur < end) {
+                        try {
+                            dependentBeanMapInstance.wait(end - cur);
+                        } catch (InterruptedException e) {
+                            LOGGER.error("Configuration change notification interrupted, exception:{}", e);
+                            Thread.currentThread().interrupt();
+                        }
+                        cur = Time.currentElapsedTime();
                     }
-                    try {
-                        invocation.proceed();
-                    } catch (Throwable throwable) {
-                        LOGGER.error("Dynamic replacement bean failed, exception:{}", throwable);
-                        beanFactory.registerSingleton(beanName, bean);
-                    }
-                    dependentBeanMapInstance.putAll(dependentBeanMapCopy);
-                    dependenciesForBeanMapInstance.putAll(dependenciesForBeanMapInstanceCopy);
+                    drso();
+                    ReferenceCounter.refreshed(beanName);
+                    ReferenceCounter.initComplete(dynamicBean);
+                    dependentBeanMapInstance.notifyAll();
                 }
                 break;
             }
         }
+    }
+
+    private void drso() {
+        Map<String, Set<String>> dependentBeanMapCopy = new ConcurrentHashMap<>(dependentBeanMapInstance);
+        Map<String, Set<String>> dependenciesForBeanMapInstanceCopy = new ConcurrentHashMap<>(dependenciesForBeanMapInstance);
+        Object bean = beanFactory.getBean(beanName);
+        beanFactory.destroySingleton(beanName);
+        try {
+            invocation.proceed();
+        } catch (Throwable throwable) {
+            LOGGER.error("Dynamic replacement bean failed, exception:{}", throwable);
+            beanFactory.registerSingleton(beanName, bean);
+        }
+        dependentBeanMapInstance.putAll(dependentBeanMapCopy);
+        dependenciesForBeanMapInstance.putAll(dependenciesForBeanMapInstanceCopy);
     }
 
     @Override

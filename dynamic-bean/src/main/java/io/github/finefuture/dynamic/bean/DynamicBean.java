@@ -25,4 +25,8 @@ public @interface DynamicBean {
 
     boolean resetArguments() default false;
 
+    String[] dependsOn() default {};
+
+    long waitTime() default 1000;
+
 }
